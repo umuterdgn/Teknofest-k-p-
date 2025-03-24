@@ -1,0 +1,72 @@
+#include <SoftwareSerial.h>
+
+// Motor Kontrol Pinleri
+#define ENA 9  // Motor Hız Kontrolü (PWM)
+#define IN1 7  // Motor Yön Kontrolü
+#define IN2 8  // Motor Yön Kontrolü
+
+// Bluetooth Modülü için
+SoftwareSerial BTSerial(2, 3); // TX = 2, RX = 3
+
+int motorDurum = 0;  // Motor durumu (0 = dur, 1 = ileri, 2 = geri)
+int motorHiz = 150;  // Motor hızı (0-255)
+
+void setup() {
+    pinMode(ENA, OUTPUT);
+    pinMode(IN1, OUTPUT);
+    pinMode(IN2, OUTPUT);
+    Serial.begin(9600); // Seri haberleşmeyi başlat
+    BTSerial.begin(9600); // Bluetooth haberleşmesi
+}
+
+void loop() {
+    if (BTSerial.available()) { // Bluetooth'tan veri geldi mi?
+        char command = BTSerial.read(); // Komutu oku
+        Serial.println(command);
+
+        switch(command) {
+            case 'F':   // İleri git
+                motorDurum = 1;
+                Serial.println("Motor İleri Çalışıyor...");
+                break;
+
+            case 'B':   // Geri git
+                motorDurum = 2;
+                Serial.println("Motor Geri Çalışıyor...");
+                break;
+
+            case 'S':   // Motor durdur
+                motorDurum = 0;
+                Serial.println("Motor Durduruldu.");
+                break;
+
+            // Motor hızını ayarla (0-9 arasında)
+            case '1': motorHiz = 25; break;
+            case '2': motorHiz = 50; break;
+            case '3': motorHiz = 75; break;
+            case '4': motorHiz = 100; break;
+            case '5': motorHiz = 125; break;
+            case '6': motorHiz = 150; break;
+            case '7': motorHiz = 175; break;
+            case '8': motorHiz = 200; break;
+            case '9': motorHiz = 255; break;
+        }
+    }
+
+    // Motor durumuna göre hareketi belirle ve hız ayarını yap
+    if (motorDurum == 1) {
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2, LOW);
+        analogWrite(ENA, motorHiz); // Motor hızını ayarla
+    } 
+    else if (motorDurum == 2) {
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, HIGH);
+        analogWrite(ENA, motorHiz); // Motor hızını ayarla
+    } 
+    else {
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, LOW);
+        analogWrite(ENA, 0); // Motoru durdur
+    }
+}
