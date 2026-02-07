@@ -1,46 +1,72 @@
 #include <SoftwareSerial.h>
+#include <Servo.h>
 
 // Motor Kontrol Pinleri
-#define ENA 9  // Motor Hız Kontrolü (PWM)
-#define IN1 7  // Motor Yön Kontrolü
-#define IN2 8  // Motor Yön Kontrolü
+#define ENA 9
+#define IN1 7
+#define IN2 8
 
-// Bluetooth Modülü için
-SoftwareSerial BTSerial(2, 3); // TX = 2, RX = 3
+#define SERVO_PIN 10   // ⭐ Servo pini
 
-int motorDurum = 0;  // Motor durumu (0 = dur, 1 = ileri, 2 = geri)
-int motorHiz = 150;  // Motor hızı (0-255)
+SoftwareSerial BTSerial(2, 3); // RX, TX
+Servo direksiyon;              // ⭐ Servo
+
+int motorDurum = 0;
+int motorHiz = 150;
+
+// Servo açıları
+int servoOrta = 90;
+int servoSol  = 45;
+int servoSag  = 135;
 
 void setup() {
     pinMode(ENA, OUTPUT);
     pinMode(IN1, OUTPUT);
     pinMode(IN2, OUTPUT);
-    Serial.begin(9600); // Seri haberleşmeyi başlat
-    BTSerial.begin(9600); // Bluetooth haberleşmesi
+
+    direksiyon.attach(SERVO_PIN);     // ⭐ Servo başlat
+    direksiyon.write(servoOrta);      // ⭐ Ortada başlasın
+
+    Serial.begin(9600);
+    BTSerial.begin(9600);
 }
 
 void loop() {
-    if (BTSerial.available()) { // Bluetooth'tan veri geldi mi?
-        char command = BTSerial.read(); // Komutu oku
+    if (BTSerial.available()) {
+        char command = BTSerial.read();
+        command = toupper(command);
+
+        Serial.print("Gelen: ");
         Serial.println(command);
 
         switch(command) {
-            case 'F':   // İleri git
+
+            case 'F':
                 motorDurum = 1;
-                Serial.println("Motor İleri Çalışıyor...");
+                direksiyon.write(servoOrta);
                 break;
 
-            case 'B':   // Geri git
+            case 'B':
                 motorDurum = 2;
-                Serial.println("Motor Geri Çalışıyor...");
+                direksiyon.write(servoOrta);
                 break;
 
-            case 'S':   // Motor durdur
+            case 'S':
                 motorDurum = 0;
-                Serial.println("Motor Durduruldu.");
                 break;
 
-            // Motor hızını ayarla (0-9 arasında)
+            case 'R':   // ⭐ SERVO SAĞ
+                direksiyon.write(servoSag);
+                break;
+
+            case 'L':   // ⭐ SERVO SOL
+                direksiyon.write(servoSol);
+                break;
+
+            case 'C':   // ⭐ SERVO ORTA
+                direksiyon.write(servoOrta);
+                break;
+
             case '1': motorHiz = 25; break;
             case '2': motorHiz = 50; break;
             case '3': motorHiz = 75; break;
@@ -53,20 +79,19 @@ void loop() {
         }
     }
 
-    // Motor durumuna göre hareketi belirle ve hız ayarını yap
-    if (motorDurum == 1) {
+    if (motorDurum == 1) {        // İLERİ
         digitalWrite(IN1, HIGH);
         digitalWrite(IN2, LOW);
-        analogWrite(ENA, motorHiz); // Motor hızını ayarla
-    } 
-    else if (motorDurum == 2) {
+        analogWrite(ENA, motorHiz);
+    }
+    else if (motorDurum == 2) {   // GERİ
         digitalWrite(IN1, LOW);
         digitalWrite(IN2, HIGH);
-        analogWrite(ENA, motorHiz); // Motor hızını ayarla
-    } 
-    else {
+        analogWrite(ENA, motorHiz);
+    }
+    else {                        // DUR
         digitalWrite(IN1, LOW);
         digitalWrite(IN2, LOW);
-        analogWrite(ENA, 0); // Motoru durdur
+        analogWrite(ENA, 0);
     }
 }
