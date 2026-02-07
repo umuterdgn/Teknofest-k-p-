@@ -2,11 +2,11 @@
 #include <Servo.h>
 
 // Motor Kontrol Pinleri
-#define ENA 9
-#define IN1 7
+#define ENA 10
+#define IN1 9
 #define IN2 8
 
-#define SERVO_PIN 10   // ⭐ Servo pini
+#define SERVO_PIN 11   // ⭐ Servo pini
 
 SoftwareSerial BTSerial(2, 3); // RX, TX
 Servo direksiyon;              // ⭐ Servo
